@@ -34,49 +34,49 @@ func loadImages() ([]string, error) {
 func slideshowHandler(w http.ResponseWriter, r *http.Request) {
     tmpl := `
     <!DOCTYPE html>
-<html>
-<head>
-    <title>Image Slideshow</title>
-    <style>
-        body {
-            text-align: center;
-            background: #000;
-            margin: 0;
-            overflow: hidden;
-            height: 100vh;
-            width: 100vw;
-        }
-        #slideshow {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
-    </style>
-</head>
-<body>
-    <img id="slideshow" src="" />
-    <script>
-        const DELAY_IN_MS = {{ .DelayInMs }};
-        
-        async function fetchImages() {
-            const response = await fetch('/images');
-            const images = await response.json();
-            return images;
-        }
+    <html>
+    <head>
+        <title>Image Slideshow</title>
+        <style>
+            body {
+                text-align: center;
+                background: #000;
+                margin: 0;
+                overflow: hidden;
+                height: 100vh;
+                width: 100vw;
+            }
+            #slideshow {
+                max-width: 100%;
+                max-height: 100%;
+                object-fit: contain;
+            }
+        </style>
+    </head>
+    <body>
+        <img id="slideshow" src="" />
+        <script>
+            const DELAY_IN_MS = {{ .DelayInMs }};
 
-        let index = 0;
-        async function showImage() {
-            const images = await fetchImages();
-            if (images.length === 0) return;
-            document.getElementById('slideshow').src = images[index];
-            index = (index + 1) % images.length;
-        }
+            async function fetchImages() {
+                const response = await fetch('/images');
+                const images = await response.json();
+                return images;
+            }
 
-        setInterval(showImage, DELAY_IN_MS);
-        showImage();
-    </script>
-</body>
-</html>`
+            let index = 0;
+            async function showImage() {
+                const images = await fetchImages();
+                if (images.length === 0) return;
+                document.getElementById('slideshow').src = images[index];
+                index = (index + 1) % images.length;
+            }
+
+            setInterval(showImage, DELAY_IN_MS);
+            showImage();
+        </script>
+    </body>
+    </html>`
 
     t := template.Must(template.New("slideshow").Parse(tmpl))
     if err := t.Execute(w, map[string]interface{}{
