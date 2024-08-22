@@ -8,7 +8,7 @@ The Slideshow application displays images from a specified directory in a web br
 
 ## Getting Started
 
-0. **Ensure You have Go Installed**
+0. **Ensure Go is Installed**
 
    https://go.dev/
 
