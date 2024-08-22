@@ -3,7 +3,7 @@ package main
 import (
     "encoding/json"
     "html/template"
-    "io/ioutil"
+    "os"
     "log"
     "net/http"
     "path/filepath"
@@ -14,7 +14,7 @@ const DELAY_IN_SECONDS = 4
 const DELAY_IN_MS = DELAY_IN_SECONDS * 1000
 
 func loadImages() ([]string, error) {
-    files, err := ioutil.ReadDir("photos")
+    files, err := os.ReadDir("photos")
     if err != nil {
         return nil, err
     }
