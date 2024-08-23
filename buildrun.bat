@@ -26,6 +26,7 @@ for /f "tokens=2 delims=:" %%I in ('"ipconfig | findstr /i "IPv4""') do set IP_A
 
 set IP_ADDRESS=%IP_ADDRESS:~1%
 
+echo.
 echo Users on the LAN can access it at http://%IP_ADDRESS%:3000/
 echo.
 echo If you want to stop the application, please close this command window
