@@ -46,6 +46,11 @@ func slideshowHandler(w http.ResponseWriter, r *http.Request) {
     totalImages := len(images)
     mu.Unlock()
 
+    if totalImages == 0 {
+        http.Error(w, "No images available :(", http.StatusNotFound)
+        return
+    }
+
     tmpl := `
     <!DOCTYPE html>
     <html>
@@ -79,9 +84,13 @@ func slideshowHandler(w http.ResponseWriter, r *http.Request) {
         <meta http-equiv="refresh" content="{{ .RefreshInterval }}" />
     </head>
     <body>
-        <div class="overlay">{{ .CurrentIndex }} of {{ .TotalImages }}</div>
+        <div class="overlay">{{ add .CurrentIndex 1 }} of {{ .TotalImages }}</div>
         {{ if .Images }}
-            <img id="slideshow" src="{{ index .Images .CurrentIndex }}?{{ .Timestamp }}" />
+            {{ with index .Images .CurrentIndex }}
+                <img id="slideshow" src="{{ . }}?{{ $.Timestamp }}" />
+            {{ else }}
+                <p>No image available.</p>
+            {{ end }}
         {{ else }}
             <p>No images available.</p>
         {{ end }}
@@ -91,17 +100,19 @@ func slideshowHandler(w http.ResponseWriter, r *http.Request) {
     now := time.Now()
     timestamp := now.UnixNano() / int64(time.Millisecond)
 
-    t := template.Must(template.New("slideshow").Parse(tmpl))
-    if err := t.Execute(w, map[string]interface{}{
+    t := template.Must(template.New("slideshow").Funcs(template.FuncMap{
+        "add": func(a, b int) int { return a + b },
+    }).Parse(tmpl))
+    err := t.Execute(w, map[string]interface{}{
         "Images":           images,
-        "CurrentIndex":     idx + 1,
+        "CurrentIndex":     idx,
         "TotalImages":      totalImages,
         "RefreshInterval":  DELAY_IN_SECONDS,
         "Timestamp":        timestamp,
-    }); err != nil {
-        http.Error(w, "Unable to load template", http.StatusInternalServerError)
+    })
+    if err != nil {
+        http.Error(w, "Unable to load template :(", http.StatusInternalServerError)
         log.Println("Template execution error:", err)
-        return
     }
 }
 
@@ -109,11 +120,40 @@ func updateIndex() {
     mu.Lock()
     defer mu.Unlock()
 
-    if len(images) == 0 {
+    newImages, err := loadImages()
+    if err != nil {
+        log.Println("Error loading images during index update:", err)
         return
     }
 
-    currentIdx = (currentIdx + 1) % len(images)
+    if len(newImages) == 0 {
+        images = []string{}
+        currentIdx = 0
+        return
+    }
+
+    if len(images) != len(newImages) || !equal(images, newImages) {
+        images = newImages
+        if len(images) > 0 {
+            currentIdx = currentIdx % len(images)
+        }
+    } else {
+        if len(images) > 0 {
+            currentIdx = (currentIdx + 1) % len(images)
+        }
+    }
+}
+
+func equal(a, b []string) bool {
+    if len(a) != len(b) {
+        return false
+    }
+    for i := range a {
+        if a[i] != b[i] {
+            return false
+        }
+    }
+    return true
 }
 
 func main() {
@@ -121,6 +161,10 @@ func main() {
     images, err = loadImages()
     if err != nil {
         log.Fatal("Error loading images:", err)
+    }
+
+    if len(images) > 0 {
+        currentIdx = 0
     }
 
     http.Handle("/photos/", http.StripPrefix("/photos/", http.FileServer(http.Dir("photos"))))
