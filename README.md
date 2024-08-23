@@ -8,10 +8,6 @@ The Slideshow application displays images from a specified directory in a web br
 
 ## Getting Started
 
-0. **Ensure Go is Installed**
-
-   https://go.dev/
-
 1. **Build and Run the Application**
 
    To build and run the application, simply double-click the `buildrun.bat` file. This script will compile the `slideshow.go` file into an executable named `run.exe` and start it. After running the script, the terminal will display the URL where the slideshow can be accessed (e.g., `http://localhost:3000` or `http://<IP Address>:3000`).
@@ -29,11 +25,10 @@ The Slideshow application displays images from a specified directory in a web br
 ## Technical Details
 
 - **Supported Image Formats:** JPG, JPEG, PNG, GIF
-- **Defaults to JavaScript in HTML:** Optionally edit the `buildrun.bat` to use `nojs_slideshow.go` if display devices aren't JavaScript enabled.
-- **Slideshow Interval:** Configurable in the `slideshow.go` or `nojs_slideshow.go` file using the `DELAY_IN_SECONDS` constant (default: 4 seconds).
+- **Slideshow Interval:** Configurable in the `slideshow.go` file using the `DELAY_IN_SECONDS` constant (default: 4 seconds).
 
 ## Troubleshooting
 
 If the application does not build or run as expected, ensure that:
 - Your Go environment is correctly set up.
-- The `/photos` directory exists and contains valid image files.
+- The `photos` directory exists and contains valid image files.
