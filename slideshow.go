@@ -1,17 +1,16 @@
 package main
 
 import (
-    "encoding/json"
     "html/template"
     "log"
     "net/http"
     "os"
     "path/filepath"
     "strings"
+    "time"
 )
 
 const DELAY_IN_SECONDS = 4
-const DELAY_IN_MS = DELAY_IN_SECONDS * 1000
 
 func loadImages() ([]string, error) {
     files, err := os.ReadDir("photos")
@@ -52,57 +51,45 @@ func slideshowHandler(w http.ResponseWriter, r *http.Request) {
                 object-fit: contain;
             }
         </style>
+        <meta http-equiv="refresh" content="{{ .RefreshInterval }}" />
     </head>
     <body>
-        <img id="slideshow" src="" />
-        <script>
-            const DELAY_IN_MS = {{ .DelayInMs }};
-
-            async function fetchImages() {
-                const response = await fetch('/images');
-                const images = await response.json();
-                return images;
-            }
-
-            let index = 0;
-            async function showImage() {
-                const images = await fetchImages();
-                if (images.length === 0) return;
-                document.getElementById('slideshow').src = images[index];
-                index = (index + 1) % images.length;
-            }
-
-            setInterval(showImage, DELAY_IN_MS);
-            showImage();
-        </script>
+        {{ if .Images }}
+            <img id="slideshow" src="{{ index .Images .CurrentIndex }}?{{ .Timestamp }}" />
+        {{ else }}
+            <p>No images available.</p>
+        {{ end }}
     </body>
     </html>`
 
-    t := template.Must(template.New("slideshow").Parse(tmpl))
-    if err := t.Execute(w, map[string]interface{}{
-        "DelayInMs": DELAY_IN_MS,
-    }); err != nil {
-        http.Error(w, "Unable to load template", http.StatusInternalServerError)
-        return
-    }
-}
-
-func imagesHandler(w http.ResponseWriter, r *http.Request) {
     images, err := loadImages()
     if err != nil {
         http.Error(w, "Unable to load images", http.StatusInternalServerError)
+        log.Println("Error loading images:", err)
         return
     }
 
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(images)
+    currentIndex := (time.Now().Second() / DELAY_IN_SECONDS) % len(images)
+
+    t := template.Must(template.New("slideshow").Parse(tmpl))
+    if err := t.Execute(w, map[string]interface{}{
+        "Images":           images,
+        "CurrentIndex":     currentIndex,
+        "RefreshInterval":  DELAY_IN_SECONDS,
+        "Timestamp":        time.Now().Unix(),
+    }); err != nil {
+        http.Error(w, "Unable to load template", http.StatusInternalServerError)
+        log.Println("Template execution error:", err)
+        return
+    }
 }
 
 func main() {
     http.Handle("/photos/", http.StripPrefix("/photos/", http.FileServer(http.Dir("photos"))))
     http.HandleFunc("/", slideshowHandler)
-    http.HandleFunc("/images", imagesHandler)
 
     log.Println("Local server established at http://localhost:3000/")
-    log.Fatal(http.ListenAndServe(":3000", nil))
+    if err := http.ListenAndServe(":3000", nil); err != nil {
+        log.Fatal("Server failed:", err)
+    }
 }
