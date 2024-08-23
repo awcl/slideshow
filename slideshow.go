@@ -89,10 +89,10 @@ func slideshowHandler(w http.ResponseWriter, r *http.Request) {
             {{ with index .Images .CurrentIndex }}
                 <img id="slideshow" src="{{ . }}?{{ $.Timestamp }}" />
             {{ else }}
-                <p>No image available.</p>
+                <p>No image available :(</p>
             {{ end }}
         {{ else }}
-            <p>No images available.</p>
+            <p>No images available :(</p>
         {{ end }}
     </body>
     </html>`
