@@ -9,6 +9,8 @@ if exist "%EXE_NAME%" (
 
 echo Building...
 
+:: go build -o go build -o "%EXE_NAME%" nojs_slideshow.go
+:: ^ USE THE ABOVE FOR A NO JS VERSION AND COMMENT OUT THE BELOW
 go build -o "%EXE_NAME%" slideshow.go
 
 if errorlevel 1 (
