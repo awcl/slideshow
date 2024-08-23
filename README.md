@@ -29,7 +29,8 @@ The Slideshow application displays images from a specified directory in a web br
 ## Technical Details
 
 - **Supported Image Formats:** JPG, JPEG, PNG, GIF
-- **Slideshow Interval:** Configurable in the `slideshow.go` file using the `DELAY_IN_SECONDS` constant (default: 4 seconds).
+- **Defaults to JavaScript in HTML** Optionally edit the `buildrun.bat` to use `nojs_slideshow.go` if display devices aren't JavaScript enabled.
+- **Slideshow Interval:** Configurable in the `slideshow.go` or `nojs_slideshow.go` file using the `DELAY_IN_SECONDS` constant (default: 4 seconds).
 
 ## Troubleshooting
 
