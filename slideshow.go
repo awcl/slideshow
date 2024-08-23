@@ -103,6 +103,6 @@ func main() {
     http.HandleFunc("/", slideshowHandler)
     http.HandleFunc("/images", imagesHandler)
 
-    log.Println("Serving on http://localhost:3000")
+    log.Println("Local Server http://localhost:3000 established")
     log.Fatal(http.ListenAndServe(":3000", nil))
 }
