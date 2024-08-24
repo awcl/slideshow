@@ -21,19 +21,23 @@ var (
 )
 
 func loadImages() ([]string, error) {
-    files, err := os.ReadDir("photos")
-    if err != nil {
-        return nil, err
-    }
-
     var imgList []string
-    for _, file := range files {
-        if !file.IsDir() {
-            ext := strings.ToLower(filepath.Ext(file.Name()))
+
+    err := filepath.WalkDir("photos", func(path string, d os.DirEntry, err error) error {
+        if err != nil {
+            return err
+        }
+        if !d.IsDir() {
+            ext := strings.ToLower(filepath.Ext(d.Name()))
             if ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".gif" {
-                imgList = append(imgList, "/photos/"+file.Name())
+                relativePath, _ := filepath.Rel("photos", path)
+                imgList = append(imgList, "/photos/"+relativePath)
             }
         }
+        return nil
+    })
+    if err != nil {
+        return nil, err
     }
 
     sort.Strings(imgList)
