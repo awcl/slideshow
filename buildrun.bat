@@ -40,4 +40,4 @@ for %%A in (%IP_ADDRESSES%) do echo http://%%A:3000/
 echo.
 echo If you want to stop the application, please close this command window
 
-pause
+timeout /t 0 /nobreak >nul
