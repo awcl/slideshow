@@ -12,7 +12,7 @@ import (
     "sync"
 )
 
-const DELAY_IN_SECONDS = 4
+const delayInSeconds = 4
 
 var (
     images     []string
@@ -64,10 +64,14 @@ func slideshowHandler(w http.ResponseWriter, r *http.Request) {
                 overflow: hidden;
                 height: 100vh;
                 width: 100vw;
+                position: relative;
             }
             #slideshow {
-                max-width: 100%;
-                max-height: 100%;
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
                 object-fit: contain;
             }
             .overlay {
@@ -103,16 +107,16 @@ func slideshowHandler(w http.ResponseWriter, r *http.Request) {
     t := template.Must(template.New("slideshow").Funcs(template.FuncMap{
         "add": func(a, b int) int { return a + b },
     }).Parse(tmpl))
-    err := t.Execute(w, map[string]interface{}{
+    
+    if err := t.Execute(w, map[string]interface{}{
         "Images":           images,
         "CurrentIndex":     idx,
         "TotalImages":      totalImages,
-        "RefreshInterval":  DELAY_IN_SECONDS,
+        "RefreshInterval":  delayInSeconds,
         "Timestamp":        timestamp,
-    })
-    if err != nil {
+    }); err != nil {
         http.Error(w, "Unable to load template :(", http.StatusInternalServerError)
-        log.Println("Template execution error:", err)
+        log.Printf("Template execution error: %v", err)
     }
 }
 
@@ -122,12 +126,12 @@ func updateIndex() {
 
     newImages, err := loadImages()
     if err != nil {
-        log.Println("Error loading images during index update:", err)
+        log.Printf("Error loading images during index update: %v", err)
         return
     }
 
     if len(newImages) == 0 {
-        images = []string{}
+        images = nil
         currentIdx = 0
         return
     }
@@ -160,7 +164,7 @@ func main() {
     var err error
     images, err = loadImages()
     if err != nil {
-        log.Fatal("Error loading images:", err)
+        log.Fatalf("Error loading images: %v", err)
     }
 
     if len(images) > 0 {
@@ -174,12 +178,12 @@ func main() {
 
     go func() {
         for {
-            time.Sleep(DELAY_IN_SECONDS * time.Second)
+            time.Sleep(delayInSeconds * time.Second)
             updateIndex()
         }
     }()
 
     if err := http.ListenAndServe(":3000", nil); err != nil {
-        log.Fatal("Server failed:", err)
+        log.Fatalf("Server failed: %v", err)
     }
 }
