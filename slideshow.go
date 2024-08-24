@@ -52,7 +52,7 @@ func formatTime(t time.Time) string {
     year := t.Format("2006")
     weekday := t.Format("Mon")
     timezone := t.Format("MST")
-    return hour + ":" + minute + " " + timezone + " // " + weekday + " " + day + " " + month + " " + year
+    return hour + ":" + minute + " " + timezone + " | " + weekday + " " + day + " " + month + " " + year
 }
 
 func slideshowHandler(w http.ResponseWriter, r *http.Request) {
@@ -94,25 +94,26 @@ func slideshowHandler(w http.ResponseWriter, r *http.Request) {
                 height: 100%;
                 object-fit: contain;
             }
-            .overlay {
-                position: absolute;
-                top: 5px;
-                left: 50%;
-                transform: translateX(-50%);
-                background-color: rgba(0, 0, 0, 0.6);
-                color: #fff;
-                padding: 4px;
-                border-radius: 5px;
-                font-size: 16px;
-                z-index: 10;
-                white-space: nowrap;
-            }
+			.overlay {
+				position: absolute;
+				bottom: 1px;
+				left: 50%;
+				transform: translateX(-50%);
+				background-color: rgba(0, 0, 0, 0.65);
+				color: #fff;
+				padding: 1px;
+				border-radius: 5px;
+				font-size: 20px;
+				z-index: 10;
+				white-space: nowrap;
+				font-family: monospace;
+			}
         </style>
         <meta http-equiv="refresh" content="{{ .RefreshInterval }}" />
     </head>
     <body>
         <div class="overlay">
-            {{ .CurrentTime }} // {{ add .CurrentIndex 1 }} of {{ .TotalImages }} Images
+            {{ .CurrentTime }} | {{ add .CurrentIndex 1 }} of {{ .TotalImages }} Images
         </div>
         {{ if .Images }}
             {{ with index .Images .CurrentIndex }}
