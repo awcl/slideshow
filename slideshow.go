@@ -44,6 +44,17 @@ func loadImages() ([]string, error) {
     return imgList, nil
 }
 
+func formatTime(t time.Time) string {
+    hour := t.Format("15")
+    minute := t.Format("04")
+    day := t.Format("02")
+    month := t.Format("Jan")
+    year := t.Format("2006")
+    weekday := t.Format("Mon")
+    timezone := t.Format("MST")
+    return hour + ":" + minute + " " + timezone + " // " + weekday + " " + day + " " + month + " " + year
+}
+
 func slideshowHandler(w http.ResponseWriter, r *http.Request) {
     mu.Lock()
     idx := currentIdx
@@ -54,6 +65,11 @@ func slideshowHandler(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "No images available :(", http.StatusNotFound)
         return
     }
+
+    now := time.Now()
+    timestamp := now.UnixNano() / int64(time.Millisecond)
+
+    currentTime := formatTime(now)
 
     tmpl := `
     <!DOCTYPE html>
@@ -80,19 +96,24 @@ func slideshowHandler(w http.ResponseWriter, r *http.Request) {
             }
             .overlay {
                 position: absolute;
-                top: 10px;
-                right: 10px;
-                background-color: rgba(0, 0, 0, 0.25);
+                top: 5px;
+                left: 50%;
+                transform: translateX(-50%);
+                background-color: rgba(0, 0, 0, 0.6);
                 color: #fff;
-                padding: 5px 10px;
-                border-radius: 3px;
-                font-size: 14px;
+                padding: 4px;
+                border-radius: 5px;
+                font-size: 16px;
+                z-index: 10;
+                white-space: nowrap;
             }
         </style>
         <meta http-equiv="refresh" content="{{ .RefreshInterval }}" />
     </head>
     <body>
-        <div class="overlay">{{ add .CurrentIndex 1 }} of {{ .TotalImages }}</div>
+        <div class="overlay">
+            {{ .CurrentTime }} // {{ add .CurrentIndex 1 }} of {{ .TotalImages }} Images
+        </div>
         {{ if .Images }}
             {{ with index .Images .CurrentIndex }}
                 <img id="slideshow" src="{{ . }}?{{ $.Timestamp }}" />
@@ -105,19 +126,17 @@ func slideshowHandler(w http.ResponseWriter, r *http.Request) {
     </body>
     </html>`
 
-    now := time.Now()
-    timestamp := now.UnixNano() / int64(time.Millisecond)
-
     t := template.Must(template.New("slideshow").Funcs(template.FuncMap{
         "add": func(a, b int) int { return a + b },
     }).Parse(tmpl))
-    
+
     if err := t.Execute(w, map[string]interface{}{
         "Images":           images,
         "CurrentIndex":     idx,
         "TotalImages":      totalImages,
         "RefreshInterval":  delayInSeconds,
         "Timestamp":        timestamp,
+        "CurrentTime":      currentTime,
     }); err != nil {
         http.Error(w, "Unable to load template :(", http.StatusInternalServerError)
         log.Printf("Template execution error: %v", err)
